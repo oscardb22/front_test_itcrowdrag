@@ -11,6 +11,7 @@ import Persons from './containers/Persons';
 import RegisterPerson from './containers/RegisterPerson';
 import UpdatePerson from './containers/UpdatePerson';
 import Movies from './containers/Movies';
+import RegisterMovie from './containers/RegisterMovie';
 import axios from 'axios';
 import { useHistory } from 'react-router-dom';
 
@@ -182,6 +183,7 @@ export default function App() {
               <Route path='/register/person' component={() => <RegisterPerson session={auth} />} />
               <Route exact path='/update/person/:personId' component={UpdatePerson} />
               <Route path='/movies' component={() => <Movies session={auth} />} />
+              <Route path='/register/movie' component={() => <RegisterMovie session={auth} />} />
             </Switch>
           </Container>
         </MuiThemeProvider>
