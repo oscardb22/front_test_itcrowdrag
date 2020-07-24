@@ -1,15 +1,23 @@
 import React from 'react';
 import { MuiThemeProvider, makeStyles, createMuiTheme } from '@material-ui/core/styles';
 import { AppBar, Menu, Toolbar, IconButton, Typography, Link, MenuItem } from '@material-ui/core';
+import Container from '@material-ui/core/Container';
 import MenuIcon from '@material-ui/icons/Menu';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 import Login from './containers/Login';
 import Home from './containers/Home';
 import Persons from './containers/Persons';
+import RegisterPerson from './containers/RegisterPerson';
+import UpdatePerson from './containers/UpdatePerson';
 import Movies from './containers/Movies';
+import axios from 'axios';
+import { useHistory } from 'react-router-dom';
 
 const useStyles = makeStyles((theme) => ({
+  toopbar: {
+    marginTop: 10,
+  },
   root: {
     flexGrow: 1,
   },
@@ -25,7 +33,7 @@ const theme = createMuiTheme({
 });
 
 export default function App() {
-
+  const history = useHistory();
   const [auth, setAuth] = React.useState(true);
   const appRef = React.useRef();
   const classes = useStyles();
@@ -35,10 +43,10 @@ export default function App() {
   const [anchorElMenu, setAnchorElMenu] = React.useState(null);
   const openMenu = Boolean(anchorElMenu)
 
-  React.useEffect(()=>{
-    if(localStorage.getItem('token')){
+  React.useEffect(() => {
+    if (localStorage.getItem('token')) {
       setAuth(true)
-    }else{
+    } else {
       setAuth(false)
     }
   }, [setAuth]);
@@ -60,11 +68,52 @@ export default function App() {
     setAnchorElMenu(null);
   };
 
+  function logOut() {
+    if (window.confirm("Are you sure exit?")) {
+      if (localStorage.getItem('token')) {
+
+        var apiBaseUrl = `https://test-itcrowdrag.herokuapp.com/users/sign_out/`;
+        var headers = {
+          headers: {
+            "Authorization": `Token ${localStorage.getItem('token')}`,
+          }
+        };
+
+        axios.get(apiBaseUrl, headers)
+          .then(function (response) {
+            console.log("DELETE PERSON RESONSED", response.status, response);
+            if (response.status === 200) {
+              console.log("EXIT", response.data);
+              alert("Good Bye");
+              localStorage.removeItem('token');
+              history.push('/');
+            }
+            else {
+              alert("ERROR");
+            }
+          })
+          .catch(function (error) {
+            console.log("ERROR ", error.response);
+            alert("Catch a error");
+            if (error.response) {
+              if (error.response.status === 401) {
+                localStorage.removeItem('token');
+                history.push('/');
+              }
+            }
+          });
+      } else {
+        alert("Is necesary user login");
+        history.push('/');
+      }
+    }
+  }
+
   return (
     <Router>
       <div ref={appRef} className={classes.root}>
         <MuiThemeProvider theme={theme}>
-          <AppBar position="static">
+          <AppBar position="static" >
             <Toolbar>
               <IconButton edge="start" className={classes.menuButton} color="inherit" aria-label="pincipal menu"
                 aria-controls="pincipal-menu"
@@ -119,18 +168,22 @@ export default function App() {
                     open={open}
                     onClose={handleClose}
                   >
-                    <MenuItem><Link href='/logout'>Logout</Link></MenuItem>
+                    <MenuItem><Link onClick={e => logOut()}>Logout</Link></MenuItem>
                   </Menu>
                 </div>
               ) : <Link color="inherit" href='/login'>Login</Link>}
             </Toolbar>
           </AppBar>
-          <Switch>
-            <Route exact path='/' component={Home} />
-            <Route path='/login' component={Login} />
-            <Route path='/persons' component={()=> <Persons session={auth} />} />
-            <Route path='/movies' component={()=> <Movies session={auth} />} />
-          </Switch>
+          <Container maxWidth="xl" className={classes.toopbar}>
+            <Switch>
+              <Route exact path='/' component={Home} />
+              <Route path='/login' component={Login} />
+              <Route path='/persons' component={() => <Persons session={auth} />} />
+              <Route path='/register/person' component={() => <RegisterPerson session={auth} />} />
+              <Route exact path='/update/person/:personId' component={UpdatePerson} />
+              <Route path='/movies' component={() => <Movies session={auth} />} />
+            </Switch>
+          </Container>
         </MuiThemeProvider>
       </div>
     </Router>

@@ -17,7 +17,7 @@ export default function Login() {
     const [password, setPassword] = useState("");
     const loginRef = React.useRef();
     const classes = useStyles();
-    const history = useHistory()
+    const history = useHistory();
 
     function validateForm() {
         return username.length > 0 && password.length > 0;

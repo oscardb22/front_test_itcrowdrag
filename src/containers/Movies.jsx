@@ -3,11 +3,13 @@ import { Table, TableBody, TableHead, TableRow, TableCell, TableContainer, Link 
 import Icon from '@material-ui/core/Icon';
 import { green } from '@material-ui/core/colors';
 import { loadCSS } from 'fg-loadcss';
+import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 
 export default function Movies({ session }) {
     const [dataTable, setDataTable] = React.useState([]);
     const moviesRef = React.useRef();
+    const history = useHistory();
 
     React.useEffect(() => {
         console.log("ENTER");
@@ -39,9 +41,49 @@ export default function Movies({ session }) {
 
     }, []);
 
+    function deleteMovie(id) {
+        if (window.confirm("Are you sure delete this movie element?")) {
+            if (localStorage.getItem('token')) {
+
+                var apiBaseUrl = `https://test-itcrowdrag.herokuapp.com/movie/delete/${id}/movie/`;
+                var headers = {
+                    headers: {
+                        "Authorization": `Token ${localStorage.getItem('token')}`,
+                    }
+                };
+
+                axios.delete(apiBaseUrl, headers)
+                    .then(function (response) {
+                        console.log("DELETE MOVIE RESONSED", response.status, response);
+                        if (response.status === 204) {
+                            console.log("Delete successfull", response.data);
+                            alert("Movie Delete successfull");
+                            history.push('/movies');
+                        }
+                        else {
+                            alert("ERROR");
+                        }
+                    })
+                    .catch(function (error) {
+                        console.log("ERROR ", error.response);
+                        alert("Catch a error");
+                        if(error.response){
+                            if(error.response.status === 401){
+                                localStorage.removeItem('token');
+                                history.push('/login');
+                            }
+                        }
+                    });
+            } else {
+                alert("Is necesary user login");
+                history.push('/login');
+            }
+        }
+    }
+
     return (
         <TableContainer>
-            <Link href='/register/movie'><Icon className="fa fa-plus-circle" color="primary" /></Link>
+            {session && (<center><Link href='/register/movie'><Icon className="fa fa-plus-circle" color="primary" /></Link></center>)}
             <Table ref={moviesRef}>
                 <TableHead>
                     <TableRow>
@@ -65,10 +107,10 @@ export default function Movies({ session }) {
                                 {session && (<TableCell align="center">
                                     <Link href='/update/movie'><Icon className="fa fa-edit" style={{ color: green[500] }} /></Link>
                                     &nbsp;
-                                    <Link ><Icon className="fa fa-trash" color="secondary" /></Link>
+                                    <Link onClick={e => deleteMovie(data.id)}><Icon className="fa fa-trash" color="secondary" /></Link>
                                 </TableCell>)}
                             </TableRow>
-                        );
+                        )
                     })}
                 </TableBody>
             </Table>
